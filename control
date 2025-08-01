@@ -1,0 +1,131 @@
+#include <PRIZM.h> //Prizm library
+#include <TELEOP.h> //Controller Library
+
+PRIZM prizm; //name for program
+PS4 ps4; //name for program
+
+
+//Any code that works is a good code. No matter how weird or simple or complex it is. Keep it simple
+//It is possible to use variables such as X and Y to substiture certain numbers for ease. But in this case, for mechatronics, its not neccessary. IF SO USE int to set up
+
+
+
+
+void setup() {
+  // put your setup code here, to run once:
+
+  prizm.PrizmBegin(); //neccesary for every code
+  ps4.resetTeleOp(); //necessary for refreshing controller
+  prizm.setMotorInvert(1, 1);  // Inverts our motor. So no need for one to be - and other to be +
+  setupB();
+}
+
+
+//autonomus 
+void setupB() {
+
+prizm.setServoPosition(1, 0);    // To move Arm up
+  delay(1000); //delay is to allow the previous code from running until 
+prizm.setServoPosition(1, 90);    // Arm down
+  delay(1000);
+
+
+prizm.setServoPosition(2,0);  //For gripper to open
+  delay(1000);
+prizm.setServoPosition(2,90); //Forgripper to close
+  delay(1000);
+
+
+prizm.setMotorSpeeds(100,100); //to move forward
+delay(1000);
+prizm.setMotorSpeeds(-100,100); // to turn left 
+delay(1000);
+prizm.setMotorSpeeds(100,-100); // to turn right
+delay(1000);
+prizm.setMotorSpeeds(-100,-100); //to turn back
+delay(1000);
+
+
+
+
+
+}
+void loop() {
+                                                          
+  unsigned long startTime = millis(); // Record start time
+  unsigned long timeLimit = 180000;     // 180 seconds in milliseconds (3 minutes 0 seconds)  
+
+while (millis() - startTime < timeLimit) {         
+  
+
+
+
+  // put your main code here, to run repeatedly:
+ps4.getPS4(); //PS4 because PS5 does not work for som reason
+
+  int leftPower = 0;    //Starting power for left motor               (int usually means default value or starting point)
+  int rightPower = 0;   //Starting power for right motor
+  int servoPort = 1; //Port for the servo 
+  int closePos = 0; //Position for the servo being closed
+  int openPos = 180; //Position for the servo being open
+
+  int gripperPort = 2; //Port for gripper
+
+
+
+  // TO MOVE D PAD      //The ps4.Button(button name) is how you set control points for each commmands. I can put SQUARE,CROSS,TRIANGLE,CIRCLE or L1, L2, L3, R1, R2, R3
+  //Make sure to follow the same format with if and else if commands    //Can also put TOUCHPAD or UP, DOWN, LEFT, RIGHT for Dpad controls  //Total of 15 choices 
+
+  //I suggest using DPAD for movement because it will limit the robot moving itself from stick drift or deadzone issues
+  //I suggest using R1, R2, R3 and L1, L2, L3 commands for sirvos and/or sensors if applicable. Can use the joysticks for movement. And those inputs for open/close and etc.
+
+                                          
+  if (ps4.Button(UP)) {
+    // Forward 
+    leftPower = 100; //MOVE FORWARD
+    rightPower = 100;
+  } else if (ps4.Button(DOWN)) {
+    // Backward 
+    leftPower = -100; //MOVE BACK
+    rightPower = -100;
+  } else if (ps4.Button(LEFT)) {
+    // Turn left
+    leftPower = -100; //Right power goes forward while left goes backward, for quick turns. Like a G-Turn
+    rightPower = 100;
+  } else if (ps4.Button(RIGHT)) {
+    // Turn right
+    leftPower = 100;//Left power goes forward while right goes backward, for quick turns. Like a G-Turn
+    rightPower = -100;
+  } else if (ps4.Button(TRIANGLE)) { //breaks if triangle pressed 
+    //Breaks
+    leftPower = 0;
+    rightPower = 0;
+  }
+  // Arm Control
+  if (ps4.Button(CROSS)) { //if cross is clicked, the arm goes goes down
+    prizm.setServoPosition(servoPort, openPos);
+  } else if (ps4.Button(CIRCLE)) { //if circle is clciked, the arm goes up
+    prizm.setServoPosition(servoPort, closePos);
+  }
+  //Gripper control 
+  if (ps4.Button(SQUARE)) { //if square is clicked, the gripper opens
+    prizm.setServoPosition(gripperPort, openPos);
+  }else if (ps4.Button(TRIANGLE)) { //if triangle is clicked, the gripper closes 
+    prizm.setServoPosition(gripperPort, closePos);
+  }
+
+
+
+
+
+  
+  prizm.setMotorPowers(leftPower, rightPower); //Reference for motors 
+
+  delay(20); //Delay that is neccessary for all codes end
+}
+
+// After time is up                             
+  prizm.setMotorSpeeds(0,0); // Stop motor
+  while (true); // Stop the loop forever (optional)
+}  
+
